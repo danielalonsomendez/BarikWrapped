@@ -1,0 +1,79 @@
+{
+  "1": {
+    "zone": "Z1",
+    "stations": [
+      {"zone":"Z1","code":"ZZA","name":"Matiko","weight":1,"line":"L3","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z1","code":"ZZB","name":"Uribarri","weight":2,"line":"L3","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z1","code":"ZZC","name":"Zazpikaleak/ Casco viejo","weight":3,"line":"L3","issues":false,"timeToNextStation":1,"features":[{"icon":"icon-info"},{"icon":"icon-cards"}],"connection":true},
+      {"zone":"Z1","code":"ZZD","name":"Zurbaranbarri","weight":4,"line":"L3","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z1","code":"ZZE","name":"Txurdinaga","weight":4,"line":"L3","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z1","code":"ZZF","name":"Otxarkoaga","weight":5,"line":"L3","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+
+      {"zone":"Z3","code":"PLE","name":"Plentzia","weight":1,"line":"L1","issues":false,"timeToNextStation":5,"features":[],"connection":false},
+      {"zone":"Z3","code":"URD","name":"Urduliz","weight":2,"line":"L1","issues":false,"timeToNextStation":3,"features":[],"connection":false},
+      {"zone":"Z3","code":"SOP","name":"Sopela","weight":3,"line":"L1","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z3","code":"LAR","name":"Larrabasterra","weight":4,"line":"L1","issues":false,"timeToNextStation":2,"features":[],"connection":false}
+    ]
+  },
+
+  "2": {
+    "zone": "Z2",
+    "stations": [
+      {"zone":"Z2","code":"ZZG","name":"Kukullaga","weight":6,"line":"L3","issues":false,"timeToNextStation":null,"features":[],"connection":false},
+
+      {"zone":"Z2","code":"KAB","name":"Kabiezes","weight":7,"line":"L2","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"STZ","name":"Santurtzi","weight":8,"line":"L2","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"PEN","name":"Peñota","weight":9,"line":"L2","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z2","code":"POR","name":"Portugalete","weight":10,"line":"L2","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z2","code":"ABT","name":"Abatxolo","weight":11,"line":"L2","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"SES","name":"Sestao","weight":12,"line":"L2","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"URB","name":"Urbinaga","weight":13,"line":"L2","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"BAG","name":"Bagatza","weight":14,"line":"L2","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z2","code":"BAR","name":"Barakaldo","weight":15,"line":"L2","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"ANS","name":"Ansio","weight":16,"line":"L2","issues":false,"timeToNextStation":2,"features":[{"icon":"icon-info"},{"icon":"icon-parking"}],"connection":false},
+      {"zone":"Z2","code":"GUR","name":"Gurutzeta/Cruces","weight":17,"line":"L2","issues":false,"timeToNextStation":4,"features":[],"connection":false},
+
+      {"zone":"Z2","code":"BER","name":"Berango","weight":5,"line":"L1","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z2","code":"IBB","name":"Ibarbengoa","weight":6,"line":"L1","issues":false,"timeToNextStation":2,"features":[{"icon":"icon-parking"}],"connection":false},
+      {"zone":"Z2","code":"BID","name":"Bidezabal","weight":7,"line":"L1","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"ALG","name":"Algorta","weight":8,"line":"L1","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"AIB","name":"Aiboa","weight":9,"line":"L1","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z2","code":"NEG","name":"Neguri","weight":10,"line":"L1","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"GOB","name":"Gobela","weight":11,"line":"L1","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"ARE","name":"Areeta","weight":12,"line":"L1","issues":false,"timeToNextStation":2,"features":[{"icon":"icon-info"}],"connection":false},
+      {"zone":"Z2","code":"LAM","name":"Lamiako","weight":13,"line":"L1","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z2","code":"LEI","name":"Leioa","weight":14,"line":"L1","issues":false,"timeToNextStation":1,"features":[{"icon":"icon-parking"}],"connection":false},
+      {"zone":"Z2","code":"AST","name":"Astrabudua","weight":15,"line":"L1","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"ERA","name":"Erandio","weight":16,"line":"L1","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"LUT","name":"Lutxana","weight":17,"line":"L1","issues":false,"timeToNextStation":2,"features":[],"connection":false}
+    ]
+  },
+
+  "3": {
+    "zone": "Z1",
+    "stations": [
+      {"zone":"Z1","code":"SIN","name":"San Ignazio","weight":18,"line":"T","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z1","code":"SAR","name":"Sarriko","weight":19,"line":"T","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z1","code":"DEU","name":"Deustu","weight":20,"line":"T","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z1","code":"SAM","name":"Santimami/San Mamés","weight":21,"line":"T","issues":false,"timeToNextStation":1,"features":[{"icon":"icon-cards"}],"connection":false},
+      {"zone":"Z1","code":"IND","name":"Indautxu","weight":22,"line":"T","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z1","code":"MOY","name":"Moyua","weight":23,"line":"T","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z1","code":"ABA","name":"Abando","weight":24,"line":"T","issues":false,"timeToNextStation":1,"features":[{"icon":"icon-cards"}],"connection":false},
+      {"zone":"Z1","code":"CAV","name":"Zazpikaleak/Casco Viejo","weight":25,"line":"T","issues":true,"timeToNextStation":2,"features":[{"icon":"icon-info"},{"icon":"icon-cards"}],"connection":false},
+      {"zone":"Z1","code":"SAN","name":"Santutxu","weight":26,"line":"T","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z1","code":"BAS","name":"Basarrate","weight":27,"line":"T","issues":false,"timeToNextStation":1,"features":[],"connection":false},
+      {"zone":"Z1","code":"BOL","name":"Bolueta","weight":28,"line":"T","issues":false,"timeToNextStation":2,"features":[{"icon":"icon-cards"}],"connection":false},
+
+      {"zone":"Z2","code":"ETX","name":"Etxebarri","weight":29,"line":"T","issues":false,"timeToNextStation":2,"features":[{"icon":"icon-parking"}],"connection":false},
+      {"zone":"Z2","code":"ARZ","name":"Ariz","weight":30,"line":"L2","issues":false,"timeToNextStation":2,"features":[],"connection":false},
+      {"zone":"Z2","code":"BSR","name":"Basauri","weight":31,"line":"L2","issues":false,"timeToNextStation":null,"features":[],"connection":false}
+    ]
+  },
+
+  "4": {
+    "zone": "Z2",
+    "stations": [
+      {"zone":"Z2","code":"ETX","name":"Etxebarri","weight":29,"line":"T","issues":false,"timeToNextStation":null,"features":[{"icon":"icon-parking"}],"connection":false}
+    ]
+  }
+}
