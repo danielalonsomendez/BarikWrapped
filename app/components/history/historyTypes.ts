@@ -139,6 +139,7 @@ export type OperatorBrand = {
   label: string
   icon: string
   keywords: string[]
+  color: string
 }
 
 export type BizkaibusLineDefinition = {

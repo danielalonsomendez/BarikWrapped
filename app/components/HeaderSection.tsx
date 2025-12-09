@@ -40,7 +40,7 @@ export function HeaderSection({
       <div className="flex w-full flex-col gap-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
         <div className="flex flex-col gap-2">
           <h1 className="text-5xl font-semibold text-red-600">Barik Wrapped</h1>
-          <p className="text-lg text-slate-700">Resumen de tu año en Metro Bilbao</p>
+          <p className="text-lg text-slate-700">Resumen de tu año en transporte público</p>
         </div>
         <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white px-4 pt-4 pb-2 shadow-sm sm:max-w-2xl">
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-center sm:gap-6">

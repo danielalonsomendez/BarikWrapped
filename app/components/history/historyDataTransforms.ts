@@ -33,31 +33,37 @@ export const OPERATOR_BRANDS: OperatorBrand[] = [
     label: 'Metro Bilbao',
     icon: '/operadores/mb.svg',
     keywords: ['metro bilbao', 'metrobilbao', 'mb metro', 'mb general'],
+    color: '#E30613',
   },
   {
     label: 'Bilbobus',
     icon: '/operadores/bilbobus.svg',
     keywords: ['bilbobus'],
+    color: '#D71920',
   },
   {
     label: 'Bizkaibus',
     icon: '/operadores/bizkaibus.png',
     keywords: ['bizkaibus', 'ezkerraldea'],
+    color: '#2E8B57',
   },
   {
     label: 'Euskotren Trena',
     icon: '/operadores/euskotren.svg',
     keywords: ['euskotren trena', 'euskotren'],
+    color: '#0078C2',
   },
   {
     label: 'Euskotren Tranbia',
     icon: '/operadores/euskotren_tranvia.svg',
     keywords: ['euskotran', 'euskotren tranbia'],
+    color: '#00A19A',
   },
   {
     label: 'Renfe',
     icon: '/operadores/renfe.svg',
     keywords: ['renfe'],
+    color: '#7A1F6B',
   },
 ]
 
@@ -118,6 +124,13 @@ const RECARGA_TOKEN = 'recarga'
 const TITULO_TOKEN = 'titulo'
 const COMPRA_TOKEN = 'compra'
 
+function normalizeTransactionLabel(value?: string | null): string {
+  if (!value) {
+    return ''
+  }
+  return value.toLowerCase().replace(/\s+/g, '')
+}
+
 const TEN_HOURS_MS = 10 * 60 * 60 * 1000
 
 export function getRecordDate(record: TransactionRecord): Date {
@@ -136,22 +149,44 @@ export function addDays(date: Date, days: number): Date {
 }
 
 export function isSingleValidation(record: TransactionRecord): boolean {
-  const text = record.transaccion?.toLowerCase() ?? ''
+  const text = normalizeTransactionLabel(record.transaccion)
   return text.includes('unica')
 }
 
 export function isEntryValidation(record: TransactionRecord): boolean {
-  const text = record.transaccion?.toLowerCase() ?? ''
-  return text.includes('entrada') && !text.includes('recarga')
+  const text = normalizeTransactionLabel(record.transaccion)
+  if (!text || text.includes(RECARGA_TOKEN)) {
+    return false
+  }
+  const entradaIndex = text.indexOf('entrada')
+  if (entradaIndex === -1) {
+    return false
+  }
+  const salidaIndex = text.indexOf('salida')
+  if (salidaIndex === -1) {
+    return true
+  }
+  return entradaIndex < salidaIndex
 }
 
 export function isExitValidation(record: TransactionRecord): boolean {
-  const text = record.transaccion?.toLowerCase() ?? ''
-  return text.includes('salida') && !text.includes('recarga')
+  const text = normalizeTransactionLabel(record.transaccion)
+  if (!text || text.includes(RECARGA_TOKEN)) {
+    return false
+  }
+  const salidaIndex = text.indexOf('salida')
+  if (salidaIndex === -1) {
+    return false
+  }
+  const entradaIndex = text.indexOf('entrada')
+  if (entradaIndex === -1) {
+    return true
+  }
+  return salidaIndex <= entradaIndex
 }
 
 export function isRecargaTransaction(record: TransactionRecord): boolean {
-  const text = record.transaccion?.toLowerCase() ?? ''
+  const text = normalizeTransactionLabel(record.transaccion)
   if (!text) {
     return false
   }
@@ -162,12 +197,12 @@ export function isRecargaTransaction(record: TransactionRecord): boolean {
 }
 
 export function isWalletRechargeRecord(record: TransactionRecord): boolean {
-  const text = record.transaccion?.toLowerCase() ?? ''
+  const text = normalizeTransactionLabel(record.transaccion)
   return text.includes(RECARGA_TOKEN) && text.includes('monedero')
 }
 
 export function isTitleRechargeRecord(record: TransactionRecord): boolean {
-  const text = record.transaccion?.toLowerCase() ?? ''
+  const text = normalizeTransactionLabel(record.transaccion)
   if (!text) {
     return false
   }
@@ -304,8 +339,9 @@ export function buildFareInsights(records: TransactionRecord[]): FareInsightsMap
     const currentPass = passStates.get(tariff.normalizedName)
     let limitedContext: FareInsight['limitedContext'] | undefined
     const isEntry = isEntryValidation(record) || isSingleValidation(record)
+    const isExit = isExitValidation(record)
     const rideAmount = typeof record.importe === 'number' ? Math.abs(record.importe) : null
-    const rideSavings = currentPass && isEntry ? rideAmount : null
+    const rideSavings = currentPass && (isEntry || isExit) ? rideAmount : null
     const daysRemaining = currentPass?.expiresAt
       ? Math.max(Math.ceil((currentPass.expiresAt.getTime() - recordDate.getTime()) / DAY_MS), 0)
       : null
@@ -449,6 +485,10 @@ export function computeJourneyStats(journeys: JourneyBlock[], fareInsights: Fare
       const fare = fareInsights.get(getRecordKey(journey.start))
       if (fare?.usageKind === 'title-recharge') {
         stats.titlePurchases += 1
+        const purchaseCost = typeof journey.start.importe === 'number' ? Math.abs(journey.start.importe) : 0
+        if (purchaseCost > 0) {
+          stats.savings -= purchaseCost
+        }
       } else {
         stats.walletRecharges += 1
       }
@@ -466,9 +506,6 @@ export function computeJourneyStats(journeys: JourneyBlock[], fareInsights: Fare
         const insight = fareInsights.get(getRecordKey(record))
         if (typeof insight?.savingsAmount === 'number') {
           stats.savings += Math.max(0, insight.savingsAmount)
-        }
-        if (typeof record.importe === 'number' && !insight?.passContext) {
-          stats.spent += Math.abs(record.importe)
         }
       })
     }

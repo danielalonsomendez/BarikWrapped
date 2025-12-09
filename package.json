@@ -9,11 +9,13 @@
     "lint": "eslint . --max-warnings=0"
   },
   "dependencies": {
+    "apexcharts": "^5.3.6",
     "idb": "^8.0.3",
     "lucide-react": "^0.471.2",
     "next": "16.0.7",
     "pdfjs-dist": "^5.4.449",
     "react": "19.2.0",
+    "react-apexcharts": "^1.9.0",
     "react-dom": "19.2.0"
   },
   "devDependencies": {

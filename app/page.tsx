@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
+import { AnnualPanel } from './components/AnnualPanel'
 import { HeaderSection, type HistoryOption } from './components/HeaderSection'
 import { HistoryExperience } from './components/HistoryTab'
 import { MetroDiagram } from './components/metro/MetroDiagram'
@@ -9,12 +10,11 @@ import { extractTransactionsFromFile } from './lib/pdfParser'
 import { listHistory, saveHistory, type HistoryEntry } from './lib/historyStore'
 import { dateFormatter, fullDateTimeFormatter } from './lib/dateFormatters'
 
-type TabId = 'historial' | 'panel' | 'metro'
+type TabId = 'panel' | 'historial' | 'metro'
 
 const TABS: Array<{ id: TabId; label: string }> = [
-  { id: 'historial', label: 'Historial' },
-  { id: 'panel', label: 'Panel anual' },
-  { id: 'metro', label: 'Mapa metro' },
+  { id: 'panel', label: 'Resumen' },
+  { id: 'historial', label: 'Historial' }
 ]
 
 export default function Home() {
@@ -25,7 +25,7 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [selectedHistoryId, setSelectedHistoryId] = useState<string>('')
   const [historyLoading, setHistoryLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<TabId>('historial')
+  const [activeTab, setActiveTab] = useState<TabId>('panel')
   const [isConfigOpen, setIsConfigOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -35,6 +35,10 @@ export default function Home() {
       label: fullDateTimeFormatter.format(new Date(entry.createdAt)),
     }))
   }, [history])
+
+  const selectedHistory = useMemo(() => {
+    return history.find((entry) => entry.id === selectedHistoryId) ?? null
+  }, [history, selectedHistoryId])
 
   useEffect(() => {
     void refreshHistory()
@@ -147,12 +151,7 @@ export default function Home() {
             isVisible={activeTab === 'historial'}
           />
 
-          {activeTab === 'panel' && (
-            <section className="w-full rounded-none border-0 bg-white p-4 text-slate-500 shadow-none sm:mt-0 sm:rounded-3xl sm:border sm:border-slate-200 sm:p-6 sm:shadow-lg">
-              <h2 className="text-2xl font-semibold text-slate-900">Panel anual</h2>
-              <p className="mt-2 text-sm">Pronto podrás ver gráficos y métricas agregadas de todas tus lecturas.</p>
-            </section>
-          )}
+          {activeTab === 'panel' && <AnnualPanel history={selectedHistory} historyLoading={historyLoading} />}
 
           {activeTab === 'metro' && (
             <section className="w-full rounded-none border-0 bg-white p-4 shadow-none sm:mt-0 sm:rounded-3xl sm:border sm:border-slate-200 sm:p-6 sm:shadow-lg">

@@ -92,10 +92,10 @@ export type HistoryExperienceProps = {
   isVisible?: boolean
 }
 
-const TABLE_GROUPING_OPTIONS: Array<{ value: GroupingMode; label: string }> = [
-  { value: 'none', label: 'Sin agrupar' },
+const GROUPING_OPTIONS: Array<{ value: GroupingMode; label: string }> = [
   { value: 'year', label: 'Agrupar por año' },
   { value: 'month', label: 'Agrupar por mes' },
+  { value: 'none', label: 'Sin agrupar' },
 ]
 
 export function HistoryExperience({
@@ -105,6 +105,7 @@ export function HistoryExperience({
   isVisible = true,
 }: HistoryExperienceProps) {
   const [historyViewMode, setHistoryViewMode] = useState<'table' | 'cards'>('cards')
+  const [groupingMode, setGroupingMode] = useState<GroupingMode>('year')
   const [operatorFilter, setOperatorFilter] = useState<string>('Todos')
   const [pendingAnchorId, setPendingAnchorId] = useState<string | null>(null)
   const [highlightedAnchorId, setHighlightedAnchorId] = useState<string | null>(null)
@@ -231,6 +232,8 @@ export function HistoryExperience({
       onNavigateToRecharge={handleNavigateToRecharge}
       highlightedAnchorId={highlightedAnchorId}
       resolveBizkaibusLine={resolveBizkaibusLine}
+      groupingMode={groupingMode}
+      onGroupingModeChange={setGroupingMode}
     />
   ) : null
 
@@ -241,6 +244,8 @@ export function HistoryExperience({
       onNavigateToRecharge={handleNavigateToRecharge}
       highlightedAnchorId={highlightedAnchorId}
       resolveBizkaibusLine={resolveBizkaibusLine}
+      groupingMode={groupingMode}
+      onGroupingModeChange={setGroupingMode}
     />
   ) : null
 
@@ -351,14 +356,17 @@ function HistoryTable({
   onNavigateToRecharge,
   highlightedAnchorId,
   resolveBizkaibusLine,
+  groupingMode,
+  onGroupingModeChange,
 }: {
   records: TransactionRecord[]
   fareInsights: FareInsightsMap
   onNavigateToRecharge?: NavigateToRechargeHandler
   highlightedAnchorId?: string | null
   resolveBizkaibusLine?: (stopName?: string | null) => BizkaibusLineMatch | null
+  groupingMode: GroupingMode
+  onGroupingModeChange: (mode: GroupingMode) => void
 }) {
-  const [groupingMode, setGroupingMode] = useState<GroupingMode>('none')
   const groupedSections = useMemo<TableGroupSection[]>(
     () => groupRecordsForTable(records, groupingMode),
     [records, groupingMode],
@@ -378,10 +386,10 @@ function HistoryTable({
       <div className="flex items-center justify-end gap-2">
         <select
           value={groupingMode}
-          onChange={(event) => setGroupingMode(event.target.value as GroupingMode)}
+          onChange={(event) => onGroupingModeChange(event.target.value as GroupingMode)}
           className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600"
         >
-          {TABLE_GROUPING_OPTIONS.map((option) => (
+          {GROUPING_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -545,15 +553,18 @@ function JourneyCards({
   onNavigateToRecharge,
   highlightedAnchorId,
   resolveBizkaibusLine,
+  groupingMode,
+  onGroupingModeChange,
 }: {
   journeys: JourneyBlock[]
   fareInsights: FareInsightsMap
   onNavigateToRecharge?: NavigateToRechargeHandler
   highlightedAnchorId?: string | null
   resolveBizkaibusLine?: (stopName?: string | null) => BizkaibusLineMatch | null
+  groupingMode: GroupingMode
+  onGroupingModeChange: (mode: GroupingMode) => void
 }) {
   const visibleJourneys = journeys.filter((journey) => journey.kind !== 'otros')
-  const [groupingMode, setGroupingMode] = useState<GroupingMode>('year')
   const journeyYearGroups = useMemo(() => {
     type DayAccumulator = { key: string; label: string; journeys: JourneyBlock[] }
     type MonthAccumulator = {
@@ -799,7 +810,14 @@ function JourneyCards({
       planContext?.kind === 'limited-pass' && planContext.totalTrips
         ? planContext.purchaseAmount / planContext.totalTrips
         : null
-    const savingsValue = typeof startFare?.savingsAmount === 'number' ? startFare.savingsAmount : null
+    const aggregatedSavings = journey.records.reduce((sum, record) => {
+      const insight = fareInsights.get(getRecordKey(record))
+      if (typeof insight?.savingsAmount === 'number') {
+        return sum + Math.max(0, insight.savingsAmount)
+      }
+      return sum
+    }, 0)
+    const savingsValue = aggregatedSavings > 0 ? aggregatedSavings : null
     const passStatusHelper = buildPassStatusHelper(planContext, startFare?.daysRemaining, limitedContext)
     const walletBalanceHelper = buildWalletBalanceHelper(journey.start.saldo)
     const headingOnClick =
@@ -1043,12 +1061,6 @@ function JourneyCards({
     )
   }
 
-  const groupingOptions: Array<{ value: GroupingMode; label: string }> = [
-    { value: 'year', label: 'Agrupar por año' },
-    { value: 'month', label: 'Agrupar por mes' },
-    { value: 'none', label: 'Sin agrupar' },
-  ]
-
   const renderGroupedContent = () => {
     if (groupingMode === 'none') {
       return (
@@ -1263,10 +1275,10 @@ function JourneyCards({
         )}
         <select
           value={groupingMode}
-          onChange={(event) => setGroupingMode(event.target.value as GroupingMode)}
+          onChange={(event) => onGroupingModeChange(event.target.value as GroupingMode)}
           className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600"
         >
-          {groupingOptions.map((option) => (
+          {GROUPING_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
