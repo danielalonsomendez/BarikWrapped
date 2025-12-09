@@ -2,18 +2,20 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
-import { AnnualPanel } from './components/AnnualPanel'
+import { AnnualPanel } from './components/AnnualTab'
 import { HeaderSection, type HistoryOption } from './components/HeaderSection'
+import { HelpInstructions } from './components/HelpInstructions'
 import { HistoryExperience } from './components/HistoryTab'
 import { MetroDiagram } from './components/metro/MetroDiagram'
 import { extractTransactionsFromFile } from './lib/pdfParser'
 import { listHistory, saveHistory, type HistoryEntry } from './lib/historyStore'
 import { dateFormatter, fullDateTimeFormatter } from './lib/dateFormatters'
 
-type TabId = 'panel' | 'historial' | 'metro'
+type TabId = 'panel' | 'fotos' | 'historial' | 'metro'
 
 const TABS: Array<{ id: TabId; label: string }> = [
   { id: 'panel', label: 'Resumen' },
+  { id: 'fotos', label: 'Fotos' },
   { id: 'historial', label: 'Historial' }
 ]
 
@@ -27,6 +29,7 @@ export default function Home() {
   const [historyLoading, setHistoryLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabId>('panel')
   const [isConfigOpen, setIsConfigOpen] = useState(false)
+  const [isHelpVisible, setIsHelpVisible] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const historyOptions = useMemo<HistoryOption[]>(() => {
@@ -49,6 +52,7 @@ export default function Home() {
     try {
       const entries = await listHistory()
       setHistory(entries)
+      setIsHelpVisible(entries.length === 0)
       if (entries.length && !newSelectedId) {
         setSelectedHistoryId(entries[0].id)
       }
@@ -111,6 +115,9 @@ export default function Home() {
     fileInputRef.current?.click()
   }
 
+  const hasHistory = history.length > 0
+  const shouldShowHelp = (!historyLoading && !hasHistory) || isHelpVisible
+
   return (
     <div className="min-h-screen bg-slate-50 px-0 py-6 text-slate-900 sm:px-4 sm:py-10">
       <main className="mx-0 flex w-full max-w-full flex-col gap-8 sm:mx-auto sm:max-w-6xl sm:mx-0">
@@ -126,37 +133,51 @@ export default function Home() {
           statusMessage={statusMessage}
           error={error}
           onOpenConfig={() => setIsConfigOpen(true)}
+          onToggleHelp={() => setIsHelpVisible((prev) => !prev)}
+          isHelpActive={shouldShowHelp}
         />
 
         <div className="flex flex-col gap-4">
-          <nav className="flex gap-2 rounded-none border border-slate-200 bg-white p-1 shadow-none sm:rounded-full sm:shadow-sm">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  activeTab === tab.id ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+          {shouldShowHelp ? (
+            <HelpInstructions onImportPdf={handleUploadAndProcess} />
+          ) : (
+            <>
+              <nav className="flex gap-2 rounded-none border border-slate-200 bg-white p-1 shadow-none sm:rounded-full sm:shadow-sm">
+                {TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      activeTab === tab.id ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
 
-          <HistoryExperience
-            history={history}
-            historyLoading={historyLoading}
-            selectedHistoryId={selectedHistoryId}
-            isVisible={activeTab === 'historial'}
-          />
+              <HistoryExperience
+                history={history}
+                historyLoading={historyLoading}
+                selectedHistoryId={selectedHistoryId}
+                isVisible={activeTab === 'historial'}
+              />
 
-          {activeTab === 'panel' && <AnnualPanel history={selectedHistory} historyLoading={historyLoading} />}
+              {(activeTab === 'panel' || activeTab === 'fotos') && (
+                <AnnualPanel
+                  history={selectedHistory}
+                  historyLoading={historyLoading}
+                  view={activeTab === 'fotos' ? 'photos' : 'overview'}
+                />
+              )}
 
-          {activeTab === 'metro' && (
-            <section className="w-full rounded-none border-0 bg-white p-4 shadow-none sm:mt-0 sm:rounded-3xl sm:border sm:border-slate-200 sm:p-6 sm:shadow-lg">
-              <MetroDiagram />
-            </section>
+              {activeTab === 'metro' && (
+                <section className="w-full rounded-none border-0 bg-white p-4 shadow-none sm:mt-0 sm:rounded-3xl sm:border sm:border-slate-200 sm:p-6 sm:shadow-lg">
+                  <MetroDiagram />
+                </section>
+              )}
+            </>
           )}
 
           {isConfigOpen && (

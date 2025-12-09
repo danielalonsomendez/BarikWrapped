@@ -1,4 +1,4 @@
-import { CalendarDays, Settings, ShieldCheck, Upload } from 'lucide-react'
+import { CalendarDays, HelpCircle, Settings, ShieldCheck, Upload } from 'lucide-react'
 import type { ChangeEvent, RefObject } from 'react'
 
 export type HistoryOption = {
@@ -18,6 +18,8 @@ export type HeaderSectionProps = {
   statusMessage: string
   error: string | null
   onOpenConfig: () => void
+  onToggleHelp: () => void
+  isHelpActive: boolean
 }
 
 export function HeaderSection({
@@ -32,6 +34,8 @@ export function HeaderSection({
   statusMessage,
   error,
   onOpenConfig,
+  onToggleHelp,
+  isHelpActive,
 }: HeaderSectionProps) {
   const hasHistory = historyOptions.length > 0
 
@@ -84,6 +88,19 @@ export function HeaderSection({
                     <Upload className="h-4 w-4" aria-hidden />
                     {isParsing ? 'Procesando…' : 'Subir historial'}
                   </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={onToggleHelp}
+                  aria-label="Ver ayuda"
+                  aria-pressed={isHelpActive}
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition ${
+                    isHelpActive
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-200 text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <HelpCircle className="h-4 w-4" aria-hidden />
                 </button>
                 <button
                   type="button"
