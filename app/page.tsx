@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
+import { Github } from 'lucide-react'
 import { AnnualPanel } from './components/AnnualTab'
 import { HeaderSection, type HistoryOption } from './components/HeaderSection'
 import { HelpInstructions } from './components/HelpInstructions'
@@ -189,6 +190,25 @@ export default function Home() {
           )}
         </div>
       </main>
+      <footer className="mt-8 flex items-center justify-center gap-2 text-sm text-slate-500 sm:mt-12">
+        <a
+          href="https://github.com/danielalonsomendez"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-slate-600 transition hover:text-slate-900"
+        >
+          Hecho por @danielalonsomendez
+        </a>
+        <a
+          href="https://github.com/danielalonsomendez/BarikWrapped"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+        >
+          <Github className="h-4 w-4" aria-hidden />
+          <span>Repositorio</span>
+        </a>
+      </footer>
     </div>
   )
 }
