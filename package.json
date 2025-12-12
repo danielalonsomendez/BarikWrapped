@@ -13,7 +13,7 @@
     "html-to-image": "^1.11.13",
     "idb": "^8.0.3",
     "lucide-react": "^0.471.2",
-    "next": "16.0.7",
+    "next": "16.0.9",
     "pdfjs-dist": "^5.4.449",
     "react": "19.2.0",
     "react-apexcharts": "^1.9.0",
