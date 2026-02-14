@@ -43,6 +43,7 @@ workflows:
       google_play:
         credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
         track: internal
+        submit_as_draft: true
         release_name: "Build #$CM_BUILD_NUMBER - $(date '+%Y-%m-%d %H:%M')"
       email:
         recipients:
