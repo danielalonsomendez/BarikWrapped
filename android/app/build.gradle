@@ -1,5 +1,11 @@
 apply plugin: 'com.android.application'
 
+def getVersionCode = {
+    // Use Codemagic build number if available, otherwise use timestamp
+    def buildNumber = System.getenv("CM_BUILD_NUMBER")
+    return buildNumber ? buildNumber.toInteger() : (int)(System.currentTimeMillis() / 1000)
+}
+
 android {
     namespace = "com.barikwrapped.barikwrapped"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,7 +13,7 @@ android {
         applicationId "com.barikwrapped.barikwrapped"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode getVersionCode()
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
