@@ -1,6 +1,7 @@
 # Next.js build output
 .next/
 out/
+build/
 
 # Node.js modules
 node_modules/
