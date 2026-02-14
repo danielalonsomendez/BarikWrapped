@@ -4,7 +4,7 @@ workflows:
     max_build_duration: 120
     environment:
       android_signing:
-        - barikwrapped_keystore
+        - keystore_reference
       groups:
         - google_play
       vars:
@@ -24,11 +24,15 @@ workflows:
       - name: Set up local.properties
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
-      - name: Build Android APK
+      - name: Build Android Debug APK
         script: |
           cd android
           ./gradlew assembleDebug
-      - name: Build Android Bundle (AAB)
+      - name: Build Android Release APK (signed)
+        script: |
+          cd android
+          ./gradlew assembleRelease
+      - name: Build Android Bundle (signed)
         script: |
           cd android
           ./gradlew bundleRelease
@@ -42,4 +46,6 @@ workflows:
         notify:
           success: true
           failure: true
+
+
 
