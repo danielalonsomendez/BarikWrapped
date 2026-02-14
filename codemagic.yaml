@@ -9,7 +9,7 @@ workflows:
         - google_play
       vars:
         PACKAGE_NAME: "com.barikwrapped.barikwrapped"
-      node: 20.11.0
+      node: 22.11.0
       java: 17
     scripts:
       - name: Install npm dependencies
