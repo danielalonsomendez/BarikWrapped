@@ -1,13 +1,27 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { Github } from 'lucide-react'
-import { AnnualPanel } from './components/AnnualTab'
+
+const AnnualPanel = dynamic(
+  () => import('./components/AnnualTab').then(mod => ({ default: mod.AnnualPanel })),
+  { ssr: false }
+)
+
+const HistoryExperience = dynamic(
+  () => import('./components/HistoryTab').then(mod => ({ default: mod.HistoryExperience })),
+  { ssr: false }
+)
+
+const MetroDiagram = dynamic(
+  () => import('./components/metro/MetroDiagram').then(mod => ({ default: mod.MetroDiagram })),
+  { ssr: false }
+)
+
 import { HeaderSection, type HistoryOption } from './components/HeaderSection'
 import { HelpInstructions } from './components/HelpInstructions'
-import { HistoryExperience } from './components/HistoryTab'
-import { MetroDiagram } from './components/metro/MetroDiagram'
 import { extractTransactionsFromFile } from './lib/pdfParser'
 import { listHistory, saveHistory, type HistoryEntry } from './lib/historyStore'
 import { dateFormatter, fullDateTimeFormatter } from './lib/dateFormatters'
