@@ -1,9 +1,14 @@
 'use client'
 
-import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { Github } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import { HeaderSection, type HistoryOption } from './components/HeaderSection'
+import { HelpInstructions } from './components/HelpInstructions'
+import { extractTransactionsFromFile } from './lib/pdfParser'
+import { listHistory, saveHistory, type HistoryEntry } from './lib/historyStore'
+import { dateFormatter, fullDateTimeFormatter } from './lib/dateFormatters'
 
 const AnnualPanel = dynamic(
   () => import('./components/AnnualTab').then(mod => ({ default: mod.AnnualPanel })),
@@ -19,12 +24,6 @@ const MetroDiagram = dynamic(
   () => import('./components/metro/MetroDiagram').then(mod => ({ default: mod.MetroDiagram })),
   { ssr: false }
 )
-
-import { HeaderSection, type HistoryOption } from './components/HeaderSection'
-import { HelpInstructions } from './components/HelpInstructions'
-import { extractTransactionsFromFile } from './lib/pdfParser'
-import { listHistory, saveHistory, type HistoryEntry } from './lib/historyStore'
-import { dateFormatter, fullDateTimeFormatter } from './lib/dateFormatters'
 
 type TabId = 'panel' | 'fotos' | 'historial' | 'metro'
 
