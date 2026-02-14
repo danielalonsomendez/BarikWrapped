@@ -109,7 +109,6 @@ workflows:
           - Internal Testers
           - Testing
         submit_to_app_store: false
-        what_to_test: "Fix errors and updates (School app)"
       email:
         recipients:
           - tu-email@ejemplo.com
