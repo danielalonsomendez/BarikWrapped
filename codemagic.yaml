@@ -10,7 +10,7 @@ workflows:
       vars:
         PACKAGE_NAME: "com.barikwrapped.barikwrapped"
       node: 22.11.0
-      java: 17
+      java: 21
     scripts:
       - name: Install npm dependencies
         script: |
