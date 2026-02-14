@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState } from 'react'
 import bizkaibusJsonData from '../../files/lineasbizkaibus.json'
 import { fullDateFormatter } from '../lib/dateFormatters'
@@ -12,7 +13,11 @@ import { AnnualHighlights } from './annual/AnnualHighlights'
 import { AnnualTopLists, type TopOperatorCard, type TopStationCard } from './annual/AnnualTopLists'
 import { AnnualMonthlyActivityChart } from './annual/AnnualMonthlyActivityChart'
 import { AnnualMetroPanel } from './annual/AnnualMetroPanel'
-import { AnnualPhotoExports } from './annual/AnnualPhotoExports'
+
+const AnnualPhotoExports = dynamic(
+  () => import('./annual/AnnualPhotoExports').then(mod => ({ default: mod.AnnualPhotoExports })),
+  { ssr: false }
+)
 import { resolveMetroStationCode, isKnownMetroStation, getMetroStationMeta } from './metro/metroUtils'
 import {
   buildFareInsights,
