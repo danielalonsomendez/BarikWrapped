@@ -1,14 +1,37 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { ChangeEvent } from 'react'
-import { Github } from 'lucide-react'
+import type { ChangeEvent, SyntheticEvent } from 'react'
+import {
+  AppBar,
+  BottomNavigation,
+  BottomNavigationAction,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
+  List,
+  ListItemIcon,
+  ListItemButton,
+  ListItemText,
+  MenuItem,
+  Paper,
+  Select,
+  Toolbar,
+  Typography,
+} from '@mui/material'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+import { CalendarDays, Clock3, Github, Grid, HelpCircle, Settings, ShieldCheck, Upload } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { HeaderSection, type HistoryOption } from './components/HeaderSection'
 import { HelpInstructions } from './components/HelpInstructions'
 import { extractTransactionsFromFile } from './lib/pdfParser'
 import { listHistory, saveHistory, type HistoryEntry } from './lib/historyStore'
-import { dateFormatter, fullDateTimeFormatter } from './lib/dateFormatters'
+import { dateFormatter, fullDateFormatter, fullDateTimeFormatter } from './lib/dateFormatters'
+import { usePlatform } from './lib/usePlatform'
+import { getRecordDate } from './components/history/historyDataTransforms'
 
 const AnnualPanel = dynamic(
   () => import('./components/AnnualTab').then(mod => ({ default: mod.AnnualPanel })),
@@ -26,14 +49,63 @@ const MetroDiagram = dynamic(
 )
 
 type TabId = 'panel' | 'fotos' | 'historial' | 'metro'
+type BottomTabId = Exclude<TabId, 'metro'>
+type BottomNavigationValue = BottomTabId | 'help' | 'settings'
+type YearOption = { value: string; label: string; total: number }
+const BARIK_RED = '#E30613'
+const NATIVE_HEADER_HEIGHT = 64
+const NATIVE_HEADER_EXTRA_OFFSET = 16
+const APP_FONT_FAMILY = 'var(--font-geist-sans), Arial, Helvetica, sans-serif'
+const materialTheme = createTheme({
+  typography: {
+    fontFamily: APP_FONT_FAMILY,
+  },
+  components: {
+    MuiButtonBase: {
+      styleOverrides: {
+        root: {
+          fontFamily: APP_FONT_FAMILY,
+        },
+      },
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          fontFamily: APP_FONT_FAMILY,
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          fontFamily: APP_FONT_FAMILY,
+        },
+      },
+    },
+    MuiBottomNavigationAction: {
+      styleOverrides: {
+        label: {
+          fontFamily: APP_FONT_FAMILY,
+        },
+      },
+    },
+  },
+})
 
 const TABS: Array<{ id: TabId; label: string }> = [
   { id: 'panel', label: 'Resumen' },
   { id: 'fotos', label: 'Fotos' },
   { id: 'historial', label: 'Historial' }
 ]
+const TAB_LABELS: Record<TabId, string> = {
+  panel: 'Resumen anual',
+  fotos: 'Fotos',
+  historial: 'Historial',
+  metro: 'Metro',
+}
 
 export default function MainApp() {
+  const { isNative, mounted } = usePlatform()
   const [file, setFile] = useState<File | null>(null)
   const [isParsing, setIsParsing] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
@@ -44,6 +116,8 @@ export default function MainApp() {
   const [activeTab, setActiveTab] = useState<TabId>('panel')
   const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [isHelpVisible, setIsHelpVisible] = useState(false)
+  const [isNativeVersionDialogOpen, setIsNativeVersionDialogOpen] = useState(false)
+  const [nativeSelectedYear, setNativeSelectedYear] = useState('')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const historyOptions = useMemo<HistoryOption[]>(() => {
@@ -57,9 +131,39 @@ export default function MainApp() {
     return history.find((entry) => entry.id === selectedHistoryId) ?? null
   }, [history, selectedHistoryId])
 
+  const nativeYearOptions = useMemo<YearOption[]>(() => {
+    if (!selectedHistory) {
+      return []
+    }
+    const recordsByYear = new Map<string, number>()
+    selectedHistory.records.forEach((record) => {
+      const date = getRecordDate(record)
+      if (Number.isNaN(date.getTime()) || date.getFullYear() < 2000) {
+        return
+      }
+      const year = `${date.getFullYear()}`
+      recordsByYear.set(year, (recordsByYear.get(year) ?? 0) + 1)
+    })
+    return Array.from(recordsByYear.entries())
+      .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))
+      .map(([year, total]) => ({ value: year, label: year, total }))
+  }, [selectedHistory])
+
   useEffect(() => {
     void refreshHistory()
   }, [])
+
+  useEffect(() => {
+    if (!nativeYearOptions.length) {
+      if (nativeSelectedYear) {
+        setNativeSelectedYear('')
+      }
+      return
+    }
+    if (!nativeSelectedYear || !nativeYearOptions.some((option) => option.value === nativeSelectedYear)) {
+      setNativeSelectedYear(nativeYearOptions[0].value)
+    }
+  }, [nativeSelectedYear, nativeYearOptions])
 
   async function refreshHistory(newSelectedId?: string) {
     setHistoryLoading(true)
@@ -131,51 +235,150 @@ export default function MainApp() {
 
   const hasHistory = history.length > 0
   const shouldShowHelp = (!historyLoading && !hasHistory) || isHelpVisible
+  const showNativeHeader = mounted && isNative
+  const showNativeBottomNavigation = mounted && isNative && hasHistory && !historyLoading
+  const nativeContentPaddingBottom = showNativeBottomNavigation
+    ? 'calc(64px + env(safe-area-inset-bottom))'
+    : undefined
+  const nativeContentPaddingTop = showNativeHeader
+    ? `calc(${NATIVE_HEADER_HEIGHT + NATIVE_HEADER_EXTRA_OFFSET}px + env(safe-area-inset-top))`
+    : undefined
+  const showNativeYearSelect =
+    showNativeHeader && !shouldShowHelp && (activeTab === 'panel' || activeTab === 'fotos') && nativeYearOptions.length > 0
+  const nativeYearDateRangeLabel = useMemo(() => {
+    if (!selectedHistory || !nativeSelectedYear) {
+      return null
+    }
+    let minDate: Date | null = null
+    let maxDate: Date | null = null
+    selectedHistory.records.forEach((record) => {
+      const date = getRecordDate(record)
+      if (Number.isNaN(date.getTime()) || date.getFullYear() < 2000) {
+        return
+      }
+      if (`${date.getFullYear()}` !== nativeSelectedYear) {
+        return
+      }
+      if (!minDate || date < minDate) {
+        minDate = date
+      }
+      if (!maxDate || date > maxDate) {
+        maxDate = date
+      }
+    })
+    if (!minDate || !maxDate) {
+      return null
+    }
+    return `${fullDateFormatter.format(minDate)} - ${fullDateFormatter.format(maxDate)}`
+  }, [nativeSelectedYear, selectedHistory])
+  const bottomNavigationValue: BottomNavigationValue = shouldShowHelp
+    ? 'help'
+    : activeTab === 'metro'
+      ? 'panel'
+      : activeTab
+  const nativeHeaderSubtitle = isConfigOpen
+    ? 'Ajustes'
+    : shouldShowHelp
+      ? 'Ayuda'
+      : TAB_LABELS[activeTab]
+
+  const handleBottomNavigationChange = (_event: SyntheticEvent, newValue: BottomNavigationValue) => {
+    if (newValue === 'panel' || newValue === 'fotos' || newValue === 'historial') {
+      setActiveTab(newValue)
+      setIsHelpVisible(false)
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-0 py-6 text-slate-900 sm:px-4 sm:py-10">
-      <main className="mx-0 flex w-full max-w-full flex-col gap-8 sm:mx-auto sm:max-w-6xl sm:mx-0">
-        <HeaderSection
-          historyOptions={historyOptions}
-          historyLoading={historyLoading}
-          selectedHistoryId={selectedHistoryId}
-          onSelectHistory={setSelectedHistoryId}
-          fileInputRef={fileInputRef}
-          onFileChange={handleFileChange}
-          onUploadAndProcess={handleUploadAndProcess}
+    <ThemeProvider theme={materialTheme}>
+      <div
+      className={`min-h-screen bg-slate-50 text-slate-900 ${
+        showNativeHeader ? 'px-0 py-0 sm:px-0 sm:py-0' : 'px-0 py-6 sm:px-4 sm:py-10'
+      }`}
+      style={{ paddingBottom: nativeContentPaddingBottom }}
+    >
+      {showNativeHeader && (
+        <NativeCapacitorHeader
           isParsing={isParsing}
-          statusMessage={statusMessage}
-          error={error}
-          onOpenConfig={() => setIsConfigOpen(true)}
-          onToggleHelp={() => setIsHelpVisible((prev) => !prev)}
-          isHelpActive={shouldShowHelp}
+          subtitle={nativeHeaderSubtitle}
+          onOpenVersionsDialog={() => setIsNativeVersionDialogOpen(true)}
         />
+      )}
+
+      <main
+        className={`mx-0 flex w-full max-w-full flex-col ${showNativeHeader ? 'gap-0' : 'gap-8'} sm:mx-auto sm:max-w-6xl sm:mx-0`}
+        style={{ paddingTop: nativeContentPaddingTop }}
+      >
+        {showNativeYearSelect && (
+          <div className="mx-4 mb-0 pb-0 sm:mx-0">
+            <FormControl fullWidth size="small" sx={{ maxWidth: 360 }}>
+              <InputLabel id="native-year-select-label">Año</InputLabel>
+              <Select
+                labelId="native-year-select-label"
+                value={nativeSelectedYear}
+                label="Año"
+                onChange={(event) => setNativeSelectedYear(event.target.value)}
+                sx={{ backgroundColor: '#ffffff' }}
+              >
+                {nativeYearOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label} · {option.total} movimientos
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            {nativeYearDateRangeLabel && (
+              <p className="mt-2 mb-0 text-xs font-semibold text-slate-500">{nativeYearDateRangeLabel}</p>
+            )}
+          </div>
+        )}
+
+        {!showNativeHeader && (
+          <HeaderSection
+            historyOptions={historyOptions}
+            historyLoading={historyLoading}
+            selectedHistoryId={selectedHistoryId}
+            onSelectHistory={setSelectedHistoryId}
+            fileInputRef={fileInputRef}
+            onFileChange={handleFileChange}
+            onUploadAndProcess={handleUploadAndProcess}
+            isParsing={isParsing}
+            statusMessage={statusMessage}
+            error={error}
+            onOpenConfig={() => setIsConfigOpen(true)}
+            onToggleHelp={() => setIsHelpVisible((prev) => !prev)}
+            isHelpActive={shouldShowHelp}
+          />
+        )}
 
         <div className="flex flex-col gap-4">
           {shouldShowHelp ? (
             <HelpInstructions onImportPdf={handleUploadAndProcess} />
           ) : (
             <>
-              <nav className="flex gap-2 rounded-none border border-slate-200 bg-white p-1 shadow-none sm:rounded-full sm:shadow-sm">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      activeTab === tab.id ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </nav>
+              {!showNativeBottomNavigation && (
+                <nav className="flex gap-2 rounded-none border border-slate-200 bg-white p-1 shadow-none sm:rounded-full sm:shadow-sm">
+                  {TABS.map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                        activeTab === tab.id ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </nav>
+              )}
 
               <HistoryExperience
                 history={history}
                 historyLoading={historyLoading}
                 selectedHistoryId={selectedHistoryId}
                 isVisible={activeTab === 'historial'}
+                hideSectionTitle={showNativeHeader}
               />
 
               {(activeTab === 'panel' || activeTab === 'fotos') && (
@@ -183,6 +386,10 @@ export default function MainApp() {
                   history={selectedHistory}
                   historyLoading={historyLoading}
                   view={activeTab === 'fotos' ? 'photos' : 'overview'}
+                  hideSectionTitle={showNativeHeader}
+                  selectedYear={showNativeHeader ? nativeSelectedYear : undefined}
+                  onSelectedYearChange={showNativeHeader ? setNativeSelectedYear : undefined}
+                  hideYearSelector={showNativeHeader}
                 />
               )}
 
@@ -203,26 +410,190 @@ export default function MainApp() {
           )}
         </div>
       </main>
-      <footer className="mt-8 flex items-center justify-center gap-2 text-sm text-slate-500 sm:mt-12">
-        <a
-          href="https://github.com/danielalonsomendez"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold text-slate-600 transition hover:text-slate-900"
+      {showNativeHeader && (
+        <>
+          <input
+            ref={fileInputRef}
+            className="hidden"
+            type="file"
+            accept="application/pdf"
+            onChange={handleFileChange}
+          />
+          <Dialog
+            open={isNativeVersionDialogOpen}
+            onClose={() => setIsNativeVersionDialogOpen(false)}
+            fullWidth
+            maxWidth="xs"
+          >
+            <DialogTitle>Versiones guardadas</DialogTitle>
+            <DialogContent sx={{ p: 0 }}>
+              <List disablePadding>
+                <ListItemButton
+                  disabled={isParsing}
+                  onClick={() => {
+                    setIsNativeVersionDialogOpen(false)
+                    handleUploadAndProcess()
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 34, color: BARIK_RED }}>
+                    <Upload className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />
+                  </ListItemIcon>
+                  <ListItemText primary={isParsing ? 'Procesando…' : 'Subir nuevo historial'} />
+                </ListItemButton>
+                {!historyOptions.length && (
+                  <ListItemButton disabled>
+                    <ListItemText primary="Aun no hay datos" />
+                  </ListItemButton>
+                )}
+                {historyOptions.map((option) => (
+                  <ListItemButton
+                    key={option.id}
+                    selected={option.id === selectedHistoryId}
+                    onClick={() => {
+                      setSelectedHistoryId(option.id)
+                      setIsHelpVisible(false)
+                      setIsNativeVersionDialogOpen(false)
+                    }}
+                  >
+                    <ListItemText primary={option.label} />
+                  </ListItemButton>
+                ))}
+              </List>
+              <div className="flex items-center justify-center gap-2 border-t border-slate-200 px-4 py-3 text-center text-xs font-semibold text-slate-600">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" strokeWidth={2.3} absoluteStrokeWidth />
+                <span>Todos los datos son procesados y guardados en tu dispositivo</span>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
+      {!showNativeHeader && (
+        <footer className="mt-8 flex items-center justify-center gap-2 text-sm text-slate-500 sm:mt-12">
+          <a
+            href="https://github.com/danielalonsomendez"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-slate-600 transition hover:text-slate-900"
+          >
+            Hecho por @danielalonsomendez
+          </a>
+          <a
+            href="https://github.com/danielalonsomendez/BarikWrapped"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+          >
+            <Github className="h-4 w-4" aria-hidden />
+            <span>Repositorio</span>
+          </a>
+        </footer>
+      )}
+
+        {showNativeBottomNavigation && (
+          <Paper
+            elevation={10}
+            sx={{
+              position: 'fixed',
+              right: 0,
+              bottom: 0,
+              left: 0,
+              zIndex: 40,
+              borderTopLeftRadius: 18,
+              borderTopRightRadius: 18,
+              overflow: 'hidden',
+              backgroundColor: BARIK_RED,
+              pb: 'env(safe-area-inset-bottom)',
+            }}
+          >
+            <BottomNavigation
+              showLabels
+              value={bottomNavigationValue}
+              onChange={handleBottomNavigationChange}
+              sx={{
+                backgroundColor: BARIK_RED,
+                '& .MuiBottomNavigationAction-root': {
+                  color: 'rgba(255, 255, 255, 0.85)',
+                },
+                '& .MuiBottomNavigationAction-root.Mui-selected': {
+                  color: '#ffffff',
+                },
+                '& .MuiBottomNavigationAction-root svg': {
+                  width: 22,
+                  height: 22,
+                  strokeWidth: 2.3,
+                },
+              }}
+            >
+              <BottomNavigationAction
+                label="Resumen"
+                value="panel"
+                icon={<CalendarDays className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />}
+              />
+              <BottomNavigationAction
+                label="Fotos"
+                value="fotos"
+                icon={<Grid className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />}
+              />
+              <BottomNavigationAction
+                label="Historial"
+                value="historial"
+                icon={<Clock3 className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />}
+              />
+              <BottomNavigationAction
+                label="Ayuda"
+                value="help"
+                icon={<HelpCircle className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />}
+                onClick={() => setIsHelpVisible((prev) => !prev)}
+              />
+              <BottomNavigationAction
+                label="Ajustes"
+                value="settings"
+                icon={<Settings className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />}
+                onClick={() => setIsConfigOpen(true)}
+              />
+            </BottomNavigation>
+          </Paper>
+        )}
+      </div>
+    </ThemeProvider>
+  )
+}
+
+type NativeCapacitorHeaderProps = {
+  isParsing: boolean
+  subtitle: string
+  onOpenVersionsDialog: () => void
+}
+
+function NativeCapacitorHeader({ isParsing, subtitle, onOpenVersionsDialog }: NativeCapacitorHeaderProps) {
+  return (
+    <AppBar
+      position="fixed"
+      elevation={0}
+      sx={{
+        backgroundColor: BARIK_RED,
+        pt: 'env(safe-area-inset-top)',
+      }}
+    >
+      <Toolbar sx={{ minHeight: `${NATIVE_HEADER_HEIGHT}px !important`, px: 1 }}>
+        <div className="flex flex-1 flex-col leading-tight">
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, opacity: 0.9 }}>
+            Barik Wrapped
+          </Typography>
+          <Typography variant="h6" sx={{ fontSize: '1.2rem', fontWeight: 700 }}>
+            {subtitle}
+          </Typography>
+        </div>
+        <IconButton
+          color="inherit"
+          onClick={onOpenVersionsDialog}
+          disabled={isParsing}
+          aria-label="Versiones guardadas"
         >
-          Hecho por @danielalonsomendez
-        </a>
-        <a
-          href="https://github.com/danielalonsomendez/BarikWrapped"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
-        >
-          <Github className="h-4 w-4" aria-hidden />
-          <span>Repositorio</span>
-        </a>
-      </footer>
-    </div>
+          <CalendarDays className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />
+        </IconButton>
+      </Toolbar>
+    </AppBar>
   )
 }
 

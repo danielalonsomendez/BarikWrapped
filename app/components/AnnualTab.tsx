@@ -47,6 +47,10 @@ type AnnualPanelProps = {
   history: HistoryEntry | null
   historyLoading: boolean
   view?: 'overview' | 'photos'
+  hideSectionTitle?: boolean
+  selectedYear?: string
+  onSelectedYearChange?: (year: string) => void
+  hideYearSelector?: boolean
 }
 
 type RankedItem = {
@@ -402,7 +406,15 @@ function rgbaString(color: RgbColor, alpha: number): string {
   return `rgba(${color.r}, ${color.g}, ${color.b}, ${clampedAlpha.toFixed(2)})`
 }
 
-export function AnnualPanel({ history, historyLoading, view = 'overview' }: AnnualPanelProps) {
+export function AnnualPanel({
+  history,
+  historyLoading,
+  view = 'overview',
+  hideSectionTitle = false,
+  selectedYear: controlledSelectedYear,
+  onSelectedYearChange,
+  hideYearSelector = false,
+}: AnnualPanelProps) {
   const { recordsByYear, yearOptions } = useMemo(() => {
     if (!history) {
       return { recordsByYear: {}, yearOptions: [] }
@@ -428,7 +440,9 @@ export function AnnualPanel({ history, historyLoading, view = 'overview' }: Annu
     return { recordsByYear: map, yearOptions: options }
   }, [history])
 
-  const [selectedYear, setSelectedYear] = useState<string>(() => yearOptions[0]?.value ?? '')
+  const [internalSelectedYear, setInternalSelectedYear] = useState<string>(() => yearOptions[0]?.value ?? '')
+  const selectedYear = controlledSelectedYear ?? internalSelectedYear
+  const setSelectedYear = onSelectedYearChange ?? setInternalSelectedYear
 
   useEffect(() => {
     if (!yearOptions.length) {
@@ -652,7 +666,7 @@ export function AnnualPanel({ history, historyLoading, view = 'overview' }: Annu
   if (!yearOptions.length) {
     return (
       <section className="w-full rounded-none border-0 bg-white p-4 text-sm text-slate-500 shadow-none sm:mt-0 sm:rounded-3xl sm:border sm:border-slate-200 sm:p-6 sm:shadow-lg">
-        <h2 className="text-2xl font-semibold text-slate-900">Resumen anual</h2>
+        {!hideSectionTitle && <h2 className="text-2xl font-semibold text-slate-900">Resumen anual</h2>}
         <p className="mt-2 text-sm text-slate-500">
           Sube al menos un PDF con tu historial para desbloquear las métricas agregadas por año.
         </p>
@@ -663,29 +677,33 @@ export function AnnualPanel({ history, historyLoading, view = 'overview' }: Annu
     <section className="w-full rounded-none border-0 bg-white p-4 shadow-none sm:mt-0 sm:rounded-3xl sm:border sm:border-slate-200 sm:p-6 sm:shadow-lg">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Resumen anual</h2>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-            {periodLabel && <span>{periodLabel}</span>}
-          </div>
+          {!hideSectionTitle && <h2 className="text-2xl font-semibold text-slate-900">Resumen anual</h2>}
+          {!hideSectionTitle && periodLabel && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span>{periodLabel}</span>
+            </div>
+          )}
         </div>
-        <div className="w-full max-w-[220px]">
-          <div className="relative">
-            <span className="pointer-events-none absolute left-4 top-1 flex items-center gap-1 text-[10px] font-semibold uppercase text-slate-400">
-              Año
-            </span>
-            <select
-              value={selectedYear}
-              onChange={(event) => setSelectedYear(event.target.value)}
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 pb-2 pt-5 text-xs font-semibold text-slate-700 shadow-sm"
-            >
-              {yearOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label} · {integerFormatter.format(option.total)} movimientos
-                </option>
-              ))}
-            </select>
+        {!hideYearSelector && (
+          <div className="w-full max-w-[220px]">
+            <div className="relative">
+              <span className="pointer-events-none absolute left-4 top-1 flex items-center gap-1 text-[10px] font-semibold uppercase text-slate-400">
+                Año
+              </span>
+              <select
+                value={selectedYear}
+                onChange={(event) => setSelectedYear(event.target.value)}
+                className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 pb-2 pt-5 text-xs font-semibold text-slate-700 shadow-sm"
+              >
+                {yearOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label} · {integerFormatter.format(option.total)} movimientos
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {view === 'overview' ? (

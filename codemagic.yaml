@@ -47,7 +47,7 @@ workflows:
         release_name: "Build #$CM_BUILD_NUMBER - $(date '+%Y-%m-%d %H:%M')"
       email:
         recipients:
-          - tu-email@ejemplo.com
+            - dani@danialonso.dev
         notify:
           success: true
           failure: true
@@ -107,10 +107,10 @@ workflows:
           - Elorrieta
           - Internal Testers
           - Testing
-        submit_to_app_store: false
+        submit_to_app_store: true
       email:
         recipients:
-          - tu-email@ejemplo.com
+            - dani@danialonso.dev
         notify:
           success: true
           failure: true
