@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">barikwrapped</string>
-    <string name="title_activity_main">barikwrapped</string>
+    <string name="app_name">Barik Wrapped</string>
+    <string name="title_activity_main">Barik Wrapped</string>
     <string name="package_name">com.barikwrapped.barikwrapped</string>
     <string name="custom_url_scheme">com.barikwrapped.barikwrapped</string>
 </resources>

@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, SyntheticEvent } from 'react'
 import {
   AppBar,
+  Button,
   BottomNavigation,
   BottomNavigationAction,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   FormControl,
@@ -23,7 +25,7 @@ import {
   Typography,
 } from '@mui/material'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
-import { CalendarDays, Clock3, Github, Grid, HelpCircle, Settings, ShieldCheck, Upload } from 'lucide-react'
+import { CalendarDays, Clock3, Github, Grid, HelpCircle, History, Settings, ShieldCheck, Upload } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { HeaderSection, type HistoryOption } from './components/HeaderSection'
 import { HelpInstructions } from './components/HelpInstructions'
@@ -50,7 +52,7 @@ const MetroDiagram = dynamic(
 
 type TabId = 'panel' | 'fotos' | 'historial' | 'metro'
 type BottomTabId = Exclude<TabId, 'metro'>
-type BottomNavigationValue = BottomTabId | 'help' | 'settings'
+type BottomNavigationValue = BottomTabId
 type YearOption = { value: string; label: string; total: number }
 const BARIK_RED = '#E30613'
 const NATIVE_HEADER_HEIGHT = 64
@@ -113,6 +115,7 @@ export default function MainApp() {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [selectedHistoryId, setSelectedHistoryId] = useState<string>('')
   const [historyLoading, setHistoryLoading] = useState(true)
+  const [historyBootstrapped, setHistoryBootstrapped] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('panel')
   const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [isHelpVisible, setIsHelpVisible] = useState(false)
@@ -179,6 +182,7 @@ export default function MainApp() {
       }
     } finally {
       setHistoryLoading(false)
+      setHistoryBootstrapped(true)
     }
   }
 
@@ -234,6 +238,7 @@ export default function MainApp() {
   }
 
   const hasHistory = history.length > 0
+  const isBootLoading = !mounted || !historyBootstrapped
   const shouldShowHelp = (!historyLoading && !hasHistory) || isHelpVisible
   const showNativeHeader = mounted && isNative
   const showNativeBottomNavigation = mounted && isNative && hasHistory && !historyLoading
@@ -271,16 +276,11 @@ export default function MainApp() {
     }
     return `${fullDateFormatter.format(minDate)} - ${fullDateFormatter.format(maxDate)}`
   }, [nativeSelectedYear, selectedHistory])
-  const bottomNavigationValue: BottomNavigationValue = shouldShowHelp
-    ? 'help'
-    : activeTab === 'metro'
-      ? 'panel'
-      : activeTab
-  const nativeHeaderSubtitle = isConfigOpen
-    ? 'Ajustes'
-    : shouldShowHelp
-      ? 'Ayuda'
-      : TAB_LABELS[activeTab]
+  const bottomNavigationValue: BottomNavigationValue = activeTab === 'metro' ? 'panel' : activeTab
+  const nativeHeaderSubtitle = shouldShowHelp ? 'Ayuda' : TAB_LABELS[activeTab]
+  if (isBootLoading) {
+    return <FullScreenLoading />
+  }
 
   const handleBottomNavigationChange = (_event: SyntheticEvent, newValue: BottomNavigationValue) => {
     if (newValue === 'panel' || newValue === 'fotos' || newValue === 'historial') {
@@ -300,7 +300,9 @@ export default function MainApp() {
       {showNativeHeader && (
         <NativeCapacitorHeader
           isParsing={isParsing}
+          isHelpActive={shouldShowHelp}
           subtitle={nativeHeaderSubtitle}
+          onToggleHelp={() => setIsHelpVisible((prev) => !prev)}
           onOpenVersionsDialog={() => setIsNativeVersionDialogOpen(true)}
         />
       )}
@@ -401,13 +403,20 @@ export default function MainApp() {
             </>
           )}
 
-          {isConfigOpen && (
-            <ConfigModal
-              onClose={() => setIsConfigOpen(false)}
-              history={history}
-              selectedHistoryId={selectedHistoryId}
-            />
-          )}
+          {isConfigOpen &&
+            (showNativeHeader ? (
+              <NativeConfigDialog
+                onClose={() => setIsConfigOpen(false)}
+                history={history}
+                selectedHistoryId={selectedHistoryId}
+              />
+            ) : (
+              <ConfigModal
+                onClose={() => setIsConfigOpen(false)}
+                history={history}
+                selectedHistoryId={selectedHistoryId}
+              />
+            ))}
         </div>
       </main>
       {showNativeHeader && (
@@ -425,7 +434,19 @@ export default function MainApp() {
             fullWidth
             maxWidth="xs"
           >
-            <DialogTitle>Versiones guardadas</DialogTitle>
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
+              <span>Versiones guardadas</span>
+              <IconButton
+                onClick={() => {
+                  setIsNativeVersionDialogOpen(false)
+                  setIsConfigOpen(true)
+                }}
+                aria-label="Abrir configuración"
+                sx={{ color: 'text.secondary' }}
+              >
+                <Settings className="h-5 w-5" />
+              </IconButton>
+            </DialogTitle>
             <DialogContent sx={{ p: 0 }}>
               <List disablePadding>
                 <ListItemButton
@@ -511,6 +532,7 @@ export default function MainApp() {
               onChange={handleBottomNavigationChange}
               sx={{
                 backgroundColor: BARIK_RED,
+                px: 1.5,
                 '& .MuiBottomNavigationAction-root': {
                   color: 'rgba(255, 255, 255, 0.85)',
                 },
@@ -539,18 +561,6 @@ export default function MainApp() {
                 value="historial"
                 icon={<Clock3 className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />}
               />
-              <BottomNavigationAction
-                label="Ayuda"
-                value="help"
-                icon={<HelpCircle className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />}
-                onClick={() => setIsHelpVisible((prev) => !prev)}
-              />
-              <BottomNavigationAction
-                label="Ajustes"
-                value="settings"
-                icon={<Settings className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />}
-                onClick={() => setIsConfigOpen(true)}
-              />
             </BottomNavigation>
           </Paper>
         )}
@@ -559,13 +569,29 @@ export default function MainApp() {
   )
 }
 
+function FullScreenLoading() {
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#E30613]">
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/35 border-t-white" aria-label="Cargando" />
+    </div>
+  )
+}
+
 type NativeCapacitorHeaderProps = {
   isParsing: boolean
+  isHelpActive: boolean
   subtitle: string
+  onToggleHelp: () => void
   onOpenVersionsDialog: () => void
 }
 
-function NativeCapacitorHeader({ isParsing, subtitle, onOpenVersionsDialog }: NativeCapacitorHeaderProps) {
+function NativeCapacitorHeader({
+  isParsing,
+  isHelpActive,
+  subtitle,
+  onToggleHelp,
+  onOpenVersionsDialog,
+}: NativeCapacitorHeaderProps) {
   return (
     <AppBar
       position="fixed"
@@ -586,11 +612,32 @@ function NativeCapacitorHeader({ isParsing, subtitle, onOpenVersionsDialog }: Na
         </div>
         <IconButton
           color="inherit"
+          onClick={onToggleHelp}
+          aria-label="Ayuda"
+          sx={{
+            mr: 0.5,
+            ...(isHelpActive
+              ? {
+                  backgroundColor: '#ffffff',
+                  color: BARIK_RED,
+                  borderRadius: '9999px',
+                  '&:hover': { backgroundColor: '#f8fafc' },
+                }
+              : {
+                  backgroundColor: 'transparent',
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.12)' },
+                }),
+          }}
+        >
+          <HelpCircle className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />
+        </IconButton>
+        <IconButton
+          color="inherit"
           onClick={onOpenVersionsDialog}
           disabled={isParsing}
           aria-label="Versiones guardadas"
         >
-          <CalendarDays className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />
+          <History className="h-5 w-5" strokeWidth={2.3} absoluteStrokeWidth />
         </IconButton>
       </Toolbar>
     </AppBar>
@@ -601,6 +648,60 @@ type ConfigModalProps = {
   onClose: () => void
   history: HistoryEntry[]
   selectedHistoryId: string
+}
+
+function NativeConfigDialog({ onClose, history, selectedHistoryId }: ConfigModalProps) {
+  const selectedHistory = history.find((entry) => entry.id === selectedHistoryId) ?? null
+
+  const handleDownloadSelectedHistory = useCallback(() => {
+    if (!selectedHistory) {
+      return
+    }
+    const json = JSON.stringify(selectedHistory.records, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    const stamp = dateFormatter.format(new Date(selectedHistory.createdAt)).replace(/\s+/g, '_')
+    anchor.href = url
+    anchor.download = `barik-${stamp}.json`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }, [selectedHistory])
+
+  return (
+    <Dialog open onClose={onClose} fullWidth maxWidth="xs">
+      <DialogTitle>Configuracion</DialogTitle>
+      <DialogContent sx={{ pt: 0 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          Descarga y copia de seguridad
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Exporta todos los datos guardados en tu dispositivo para conservar una copia o moverla a otro dispositivo.
+        </Typography>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose} color="inherit">
+          Cerrar
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => {
+            handleDownloadSelectedHistory()
+            onClose()
+          }}
+          disabled={!selectedHistory}
+          sx={{
+            backgroundColor: BARIK_RED,
+            '&:hover': {
+              backgroundColor: '#b90510',
+            },
+          }}
+        >
+          Descargar datos
+        </Button>
+      </DialogActions>
+    </Dialog>
+  )
 }
 
 function ConfigModal({ onClose, history, selectedHistoryId }: ConfigModalProps) {
