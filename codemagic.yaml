@@ -6,7 +6,7 @@ workflows:
       android_signing:
         - BW
       groups:
-        - Google Play
+        - BW
       vars:
         PACKAGE_NAME: "com.barikwrapped.barikwrapped"
       node: 22.11.0
