@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,7 +8,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        UIScrollView.appearance().bounces = false
+        UIScrollView.appearance().alwaysBounceVertical = false
+        UIScrollView.appearance().alwaysBounceHorizontal = false
+
+        disableWebViewScrollBounceIfNeeded()
         return true
     }
 
@@ -27,6 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        disableWebViewScrollBounceIfNeeded()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
@@ -46,4 +52,55 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+    private func disableWebViewScrollBounceIfNeeded(attempt: Int = 0) {
+        let maxAttempts = 20
+        guard let rootView = getRootView() else {
+            return
+        }
+
+        if let webView = findWebView(in: rootView) {
+            let scrollView = webView.scrollView
+            scrollView.isScrollEnabled = false
+            scrollView.bounces = false
+            scrollView.alwaysBounceVertical = false
+            scrollView.alwaysBounceHorizontal = false
+            scrollView.contentInsetAdjustmentBehavior = .never
+            return
+        }
+
+        guard attempt < maxAttempts else {
+            return
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.disableWebViewScrollBounceIfNeeded(attempt: attempt + 1)
+        }
+    }
+
+    private func findWebView(in view: UIView) -> WKWebView? {
+        if let webView = view as? WKWebView {
+            return webView
+        }
+
+        for subview in view.subviews {
+            if let found = findWebView(in: subview) {
+                return found
+            }
+        }
+
+        return nil
+    }
+
+    private func getRootView() -> UIView? {
+        if let rootView = window?.rootViewController?.view {
+            return rootView
+        }
+
+        let keyWindow = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+
+        return keyWindow?.rootViewController?.view
+    }
 }

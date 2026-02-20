@@ -56,7 +56,6 @@ type BottomNavigationValue = BottomTabId
 type YearOption = { value: string; label: string; total: number }
 const BARIK_RED = '#E30613'
 const NATIVE_HEADER_HEIGHT = 64
-const NATIVE_HEADER_EXTRA_OFFSET = 16
 const APP_FONT_FAMILY = 'var(--font-geist-sans), Arial, Helvetica, sans-serif'
 const materialTheme = createTheme({
   typography: {
@@ -107,7 +106,7 @@ const TAB_LABELS: Record<TabId, string> = {
 }
 
 export default function MainApp() {
-  const { isNative, mounted } = usePlatform()
+  const { isNative, isIOS, mounted } = usePlatform()
   const [file, setFile] = useState<File | null>(null)
   const [isParsing, setIsParsing] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
@@ -241,13 +240,16 @@ export default function MainApp() {
   const isBootLoading = !mounted || !historyBootstrapped
   const shouldShowHelp = (!historyLoading && !hasHistory) || isHelpVisible
   const showNativeHeader = mounted && isNative
+  const nativeStatusBarInset = showNativeHeader
+    ? isIOS
+      ? 'max(env(safe-area-inset-top), 20px)'
+      : 'env(safe-area-inset-top)'
+    : '0px'
   const showNativeBottomNavigation = mounted && isNative && hasHistory && !historyLoading
-  const nativeContentPaddingBottom = showNativeBottomNavigation
-    ? 'calc(64px + env(safe-area-inset-bottom))'
-    : undefined
-  const nativeContentPaddingTop = showNativeHeader
-    ? `calc(${NATIVE_HEADER_HEIGHT + NATIVE_HEADER_EXTRA_OFFSET}px + env(safe-area-inset-top))`
-    : undefined
+  const nativeHeaderOffset = `calc(${NATIVE_HEADER_HEIGHT}px + ${nativeStatusBarInset})`
+  const nativeContentTopOffset = `calc(${nativeHeaderOffset} - 1px)`
+  const nativeContentInnerTopPadding = isIOS ? '14px' : '0px'
+  const nativeBottomOffset = showNativeBottomNavigation ? 'calc(64px + env(safe-area-inset-bottom))' : '0px'
   const showNativeYearSelect =
     showNativeHeader && !shouldShowHelp && (activeTab === 'panel' || activeTab === 'fotos') && nativeYearOptions.length > 0
   const nativeYearDateRangeLabel = useMemo(() => {
@@ -292,16 +294,19 @@ export default function MainApp() {
   return (
     <ThemeProvider theme={materialTheme}>
       <div
-      className={`min-h-screen bg-slate-50 text-slate-900 ${
-        showNativeHeader ? 'px-0 py-0 sm:px-0 sm:py-0' : 'px-0 py-6 sm:px-4 sm:py-10'
-      }`}
-      style={{ paddingBottom: nativeContentPaddingBottom }}
-    >
+        className={`bg-slate-50 text-slate-900 ${
+          showNativeHeader
+            ? 'relative h-[100dvh] overflow-hidden px-0 py-0 sm:px-0 sm:py-0'
+            : 'min-h-screen px-0 py-6 sm:px-4 sm:py-10'
+        }`}
+        style={showNativeHeader ? { overscrollBehavior: 'none' } : undefined}
+      >
       {showNativeHeader && (
         <NativeCapacitorHeader
           isParsing={isParsing}
           isHelpActive={shouldShowHelp}
           subtitle={nativeHeaderSubtitle}
+          statusBarInset={nativeStatusBarInset}
           onToggleHelp={() => setIsHelpVisible((prev) => !prev)}
           onOpenVersionsDialog={() => setIsNativeVersionDialogOpen(true)}
         />
@@ -309,7 +314,21 @@ export default function MainApp() {
 
       <main
         className={`mx-0 flex w-full max-w-full flex-col ${showNativeHeader ? 'gap-0' : 'gap-8'} sm:mx-auto sm:max-w-6xl sm:mx-0`}
-        style={{ paddingTop: nativeContentPaddingTop }}
+        style={
+          showNativeHeader
+            ? {
+                position: 'absolute',
+                top: nativeContentTopOffset,
+                right: 0,
+                bottom: nativeBottomOffset,
+                left: 0,
+                paddingTop: nativeContentInnerTopPadding,
+                overflowY: 'auto',
+                overscrollBehaviorY: 'none',
+                WebkitOverflowScrolling: 'auto',
+              }
+            : undefined
+        }
       >
         {showNativeYearSelect && (
           <div className="mx-4 mb-0 pb-0 sm:mx-0">
@@ -581,6 +600,7 @@ type NativeCapacitorHeaderProps = {
   isParsing: boolean
   isHelpActive: boolean
   subtitle: string
+  statusBarInset: string
   onToggleHelp: () => void
   onOpenVersionsDialog: () => void
 }
@@ -589,6 +609,7 @@ function NativeCapacitorHeader({
   isParsing,
   isHelpActive,
   subtitle,
+  statusBarInset,
   onToggleHelp,
   onOpenVersionsDialog,
 }: NativeCapacitorHeaderProps) {
@@ -598,7 +619,7 @@ function NativeCapacitorHeader({
       elevation={0}
       sx={{
         backgroundColor: BARIK_RED,
-        pt: 'env(safe-area-inset-top)',
+        pt: statusBarInset,
       }}
     >
       <Toolbar sx={{ minHeight: `${NATIVE_HEADER_HEIGHT}px !important`, px: 1 }}>
