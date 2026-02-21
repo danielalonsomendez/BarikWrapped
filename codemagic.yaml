@@ -81,12 +81,12 @@ workflows:
           npx cap sync ios
       - name: Set build number
         script: |
-          # Make sure BUILD_NUMBER is > 100 even if CM_BUILD_NUMBER is empty/0
-          CM_BUILD_NUMBER_VAL=${CM_BUILD_NUMBER:-0}
-          BUILD_NUMBER=$(( CM_BUILD_NUMBER_VAL + 100 ))
-          if [ "$BUILD_NUMBER" -le 100 ]; then
-            BUILD_NUMBER=101
-          fi
+          # fetch current CFBundleVersion from Info.plist (default to 100 if missing)
+          current=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/App/App/Info.plist 2>/dev/null || echo 100)
+          CM=${CM_BUILD_NUMBER:-0}
+          # bump by 1 plus any incremental build number from Codemagic
+          BUILD_NUMBER=$(( current + 1 + CM ))
+          echo "Previous CFBundleVersion: $current"
           echo "Using BUILD_NUMBER=$BUILD_NUMBER"
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist
       - name: Set up code signing
