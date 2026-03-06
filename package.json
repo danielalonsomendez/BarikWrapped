@@ -6,9 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --max-warnings=0"
+    "lint": "eslint . --max-warnings=0",
+    "sync:android": "npx cap sync android",
+    "watch:build": "chokidar 'app/**/*.{ts,tsx,js,jsx,css,scss,svg,html}' -c 'npm run build && npx cap copy' --initial",
+    "watch:build:android": "chokidar 'app/**/*.{ts,tsx,js,jsx,css,scss,svg,html}' -c 'npm run build && npx cap sync android' --initial"
   },
   "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/cli": "^8.1.0",
+    "@capacitor/core": "^8.1.0",
+    "@capacitor/ios": "^8.1.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.8",
+    "@mui/material": "^7.3.8",
     "apexcharts": "^5.3.6",
     "html-to-image": "^1.11.13",
     "idb": "^8.0.3",
@@ -20,10 +31,12 @@
     "react-dom": "19.2.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "chokidar-cli": "^3.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.7",
     "tailwindcss": "^4",

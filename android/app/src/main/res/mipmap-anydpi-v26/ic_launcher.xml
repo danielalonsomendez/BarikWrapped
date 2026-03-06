@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background>
+        <inset
+            android:drawable="@mipmap/ic_launcher_background"
+            android:inset="16.7%" />
+    </background>
+
+    <!-- foreground with extra padding -->
+    <foreground>
+        <inset
+            android:drawable="@mipmap/ic_launcher_foreground"
+            android:inset="28%" />          <!-- <- padding aumentado a 25% -->
+        <!-- o bien:
+             android:insetLeft="25%"
+             android:insetTop="25%"
+             android:insetRight="25%"
+             android:insetBottom="25%"
+        -->
+    </foreground>
+</adaptive-icon>

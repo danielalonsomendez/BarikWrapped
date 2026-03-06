@@ -90,6 +90,7 @@ export type HistoryExperienceProps = {
   historyLoading: boolean
   selectedHistoryId: string
   isVisible?: boolean
+  hideSectionTitle?: boolean
 }
 
 const GROUPING_OPTIONS: Array<{ value: GroupingMode; label: string }> = [
@@ -103,6 +104,7 @@ export function HistoryExperience({
   historyLoading,
   selectedHistoryId,
   isVisible = true,
+  hideSectionTitle = false,
 }: HistoryExperienceProps) {
   const [historyViewMode, setHistoryViewMode] = useState<'table' | 'cards'>('cards')
   const [groupingMode, setGroupingMode] = useState<GroupingMode>('year')
@@ -267,7 +269,7 @@ export function HistoryExperience({
     <section className="w-full space-y-4 rounded-none border-0 bg-white p-4 shadow-none sm:mt-0 sm:rounded-3xl sm:border sm:border-slate-200 sm:p-6 sm:shadow-lg">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Historial</h2>
+          {!hideSectionTitle && <h2 className="text-2xl font-semibold text-slate-900">Historial</h2>}
         </div>
         {hasSelectedHistory && (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
