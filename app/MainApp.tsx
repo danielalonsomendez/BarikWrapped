@@ -510,14 +510,6 @@ export default function MainApp() {
       {!showNativeHeader && (
         <footer className="mt-8 flex items-center justify-center gap-2 text-sm text-slate-500 sm:mt-12">
           <a
-            href="https://github.com/danielalonsomendez"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-slate-600 transition hover:text-slate-900"
-          >
-            Hecho por @danielalonsomendez
-          </a>
-          <a
             href="https://github.com/danielalonsomendez/BarikWrapped"
             target="_blank"
             rel="noopener noreferrer"
